@@ -1,6 +1,5 @@
 import streamlit as st
 import time
-import random
 import joblib
 import pandas as pd
 
@@ -12,12 +11,14 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 # Load trained ML model
-model = joblib.load("stroke_model.pkl")
+try:
+    model = joblib.load("stroke_model.pkl")
+except Exception as e:
+    st.error(f"Error loading model: {e}")
 # Load custom CSS
 def local_css(file_name):
-    with open(file_name, "r") as f:
+    with open(file_name, "r", encoding="utf-8") as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
-
 try:
     local_css("style.css")
 except FileNotFoundError:
