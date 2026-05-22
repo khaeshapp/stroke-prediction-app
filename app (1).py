@@ -3,28 +3,50 @@ import time
 import joblib
 import pandas as pd
 
-# Must be the first Streamlit command
+# ---------------- PAGE CONFIG ----------------
 st.set_page_config(
     page_title="AI Stroke Prediction System",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
-# Load trained ML model
+
+# ---------------- LOAD MODEL ----------------
 try:
     model = joblib.load("stroke_model.pkl")
 except Exception as e:
     st.error(f"Error loading model: {e}")
-# Load custom CSS
+    model = None
+
+# ---------------- LOAD CSS ----------------
 def local_css(file_name):
     with open(file_name, "r", encoding="utf-8") as f:
-        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
 try:
     local_css("style.css")
 except FileNotFoundError:
     pass
-# Real ML Prediction Function
+
+# FIX: ensure labels are visible even if CSS breaks
+st.markdown("""
+<style>
+label {
+    color: #000000 !important;
+    font-weight: 600 !important;
+}
+
+.stSelectbox label, .stNumberInput label {
+    color: #000000 !important;
+    font-weight: 600 !important;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# ---------------- PREDICTION FUNCTION ----------------
 def predict_stroke_risk(data):
+    if model is None:
+        return False, 0
 
     input_data = pd.DataFrame([{
         'age': data['age'],
@@ -35,158 +57,76 @@ def predict_stroke_risk(data):
     }])
 
     prediction = model.predict(input_data)[0]
-
     probability = model.predict_proba(input_data)[0][1]
 
-    confidence = round(probability * 100, 1)
+    return prediction == 1, round(probability * 100, 1)
 
-    is_high_risk = prediction == 1
-
-    return is_high_risk, confidence
-
+# ---------------- UI ----------------
 def main():
-    # Hero Section
-    st.markdown("""
-        <div class="hero-container">
-            <div class="floating-icon icon-1">🧠</div>
-            <div class="floating-icon icon-2">🧬</div>
-            <div class="floating-icon icon-3">❤️</div>
-            <h1 class="hero-title">AI Stroke Prediction System <span class="heartbeat">❤️</span></h1>
-            <h3 class="hero-subtitle">AI-powered stroke risk analysis</h3>
-            <p class="hero-text">Leveraging state-of-the-art machine learning to provide early detection and actionable insights for proactive healthcare management.</p>
-        </div>
-    """, unsafe_allow_html=True)
 
-    # Main Content Area
+    # HEADER
+    st.title("🧠 AI Stroke Prediction System")
+    st.write("AI-powered health risk analysis for early stroke detection")
+
     col1, col2 = st.columns([2, 1], gap="large")
 
+    # ---------------- INPUT SECTION ----------------
     with col1:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown('<h3 class="section-header">Patient Health Profile</h3>', unsafe_allow_html=True)
-        
-        with st.form("patient_form", clear_on_submit=False):
-            # Form Inputs
-            c1, c2 = st.columns(2)
-            
-            with c1:
-                age = st.number_input("Age (Years)", min_value=1, max_value=120, value=45, step=1)
-                bmi = st.number_input("BMI (Body Mass Index)", min_value=10.0, max_value=60.0, value=25.0, step=0.1)
-                glucose = st.number_input("Average Glucose Level", min_value=50.0, max_value=300.0, value=100.0, step=1.0)
-                work_type = st.selectbox("Work Type", ["Private", "Self-employed", "Govt_job", "children", "Never_worked"])
-                residence_type = st.selectbox("Residence Type", ["Urban", "Rural"])
-                
-            with c2:
-                hypertension = st.selectbox("Hypertension", ["No", "Yes"])
-                heart_disease = st.selectbox("Heart Disease", ["No", "Yes"])
-                gender = st.selectbox("Gender", ["Male", "Female", "Other"])
-                ever_married = st.selectbox("Ever Married", ["No", "Yes"])
-                smoking_status = st.selectbox("Smoking Status", ["never smoked", "Unknown", "formerly smoked", "smokes"])
+        st.subheader("Patient Health Profile")
 
-            st.markdown("<br>", unsafe_allow_html=True)
-            
-            # Action Buttons
-            submit_col1, submit_col2 = st.columns([1, 1])
-            with submit_col1:
-                submitted = st.form_submit_button("🧠 Analyze Patient Data", use_container_width=True)
-            with submit_col2:
-                # To clear, we can just reload by using a button outside form or just a fake clear
-                clear = st.form_submit_button("↺ Reset Form", use_container_width=True)
+        with st.form("patient_form"):
+            age = st.number_input("Age", 1, 120, 45)
+            bmi = st.number_input("BMI", 10.0, 60.0, 25.0)
+            glucose = st.number_input("Glucose Level", 50.0, 300.0, 100.0)
 
-        st.markdown('</div>', unsafe_allow_html=True)
+            hypertension = st.selectbox("Hypertension", ["No", "Yes"])
+            heart_disease = st.selectbox("Heart Disease", ["No", "Yes"])
 
+            submitted = st.form_submit_button("Analyze Risk")
+
+    # ---------------- RESULT SECTION ----------------
     with col2:
-        st.markdown('<div class="glass-card result-container">', unsafe_allow_html=True)
-        st.markdown('<h3 class="section-header">Analysis Results</h3>', unsafe_allow_html=True)
-        
-        if clear:
-            st.session_state.clear()
-            st.rerun()
+        st.subheader("Analysis Result")
 
         if submitted:
-            # Gather data
+
             patient_data = {
-                'age': age, 'bmi': bmi, 'glucose': glucose,
-                'hypertension': hypertension, 'heart_disease': heart_disease,
-                'smoking': smoking_status
+                "age": age,
+                "bmi": bmi,
+                "glucose": glucose,
+                "hypertension": hypertension,
+                "heart_disease": heart_disease
             }
-            
-            # Show animated loader
-            with st.spinner("Initializing neural networks..."):
-                time.sleep(1)
-            with st.spinner("Analyzing biometric markers..."):
-                time.sleep(1)
-                
-            is_high_risk, confidence = predict_stroke_risk(patient_data)
-            
-            # Display Results with animation
-            st.markdown('<div class="fade-in">', unsafe_allow_html=True)
-            if is_high_risk:
-                st.markdown(f"""
-                    <div class="result-card high-risk">
-                        <div class="result-icon">⚠️</div>
-                        <h2 style="color: #ff4b4b; margin: 0;">High Risk Detected</h2>
-                        <div class="confidence-meter">
-                            <span class="confidence-value">{confidence}%</span>
-                            <span class="confidence-label">Confidence Level</span>
-                        </div>
-                        <p style="margin-top: 15px;">Immediate medical consultation is strongly advised. AI models indicate a significantly elevated probability of cerebrovascular events.</p>
-                    </div>
-                """, unsafe_allow_html=True)
+
+            with st.spinner("Analyzing data..."):
+                time.sleep(1.5)
+
+            risk, confidence = predict_stroke_risk(patient_data)
+
+            if risk:
+                st.error(f"⚠️ High Stroke Risk\nConfidence: {confidence}%")
+                st.write("Consult a medical professional immediately.")
             else:
-                 st.markdown(f"""
-                    <div class="result-card low-risk">
-                        <div class="result-icon">✅</div>
-                        <h2 style="color: #00d4ff; margin: 0;">Low Risk Profile</h2>
-                        <div class="confidence-meter">
-                            <span class="confidence-value">{confidence}%</span>
-                            <span class="confidence-label">Confidence Level</span>
-                        </div>
-                        <p style="margin-top: 15px;">Biometric indicators are within normal parameters. Continue maintaining a healthy lifestyle and regular check-ups.</p>
-                    </div>
-                """, unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Feature Importance Mockup
-            st.markdown("<br><h5>Key Risk Factors Identified:</h5>", unsafe_allow_html=True)
-            if is_high_risk:
-                if age > 50: st.markdown("• **Age** is a contributing factor.")
-                if bmi > 25: st.markdown("• **BMI** suggests elevated risk.")
-                if hypertension == "Yes": st.markdown("• **Hypertension** significantly increases risk.")
-                if heart_disease == "Yes": st.markdown("• **Heart Disease** history detected.")
-                if glucose > 120: st.markdown("• **Glucose Level** is higher than optimal.")
-            else:
-                st.markdown("• All tracked vital signs are within expected ranges.")
-                
+                st.success(f"✅ Low Stroke Risk\nConfidence: {confidence}%")
+                st.write("Maintain a healthy lifestyle.")
+
         else:
-            st.markdown("""
-                <div style="text-align: center; color: #8892b0; padding: 40px 0;">
-                    <p style="font-size: 48px; margin-bottom: 10px;">📊</p>
-                    <p>Awaiting patient data...</p>
-                    <p style="font-size: 12px;">Fill out the profile and click Analyze to generate an AI risk assessment.</p>
-                </div>
-            """, unsafe_allow_html=True)
-            
-        st.markdown('</div>', unsafe_allow_html=True)
+            st.info("Enter patient data and click Analyze Risk")
 
-    # Footer / About Section
+    # ---------------- FOOTER (FIXED) ----------------
     st.markdown("---")
-    st.markdown("""
-        <div class="footer-container">
-            <h4 style="color: var(--accent-purple); font-family: 'Outfit', sans-serif;">About the AI model</h4>
-            <p style="margin-bottom: 20px;">This system leverages advanced machine learning algorithms trained on comprehensive healthcare datasets to analyze biometric markers and identify complex patterns associated with stroke risk.</p>
-            
-            <h4 style="color: var(--accent-purple); font-family: 'Outfit', sans-serif;">Technologies used:</h4>
-            <ul style="list-style-type: none; padding: 0; display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 30px;">
-                <li style="background: rgba(100, 255, 218, 0.1); padding: 5px 15px; border-radius: 15px; border: 1px solid rgba(100, 255, 218, 0.3);">Python</li>
-                <li style="background: rgba(100, 255, 218, 0.1); padding: 5px 15px; border-radius: 15px; border: 1px solid rgba(100, 255, 218, 0.3);">Streamlit</li>
-                <li style="background: rgba(100, 255, 218, 0.1); padding: 5px 15px; border-radius: 15px; border: 1px solid rgba(100, 255, 218, 0.3);">Scikit-learn</li>
-                <li style="background: rgba(100, 255, 218, 0.1); padding: 5px 15px; border-radius: 15px; border: 1px solid rgba(100, 255, 218, 0.3);">Logistic Regression</li>
-                <li style="background: rgba(100, 255, 218, 0.1); padding: 5px 15px; border-radius: 15px; border: 1px solid rgba(100, 255, 218, 0.3);">AI Prompt Engineering</li>
-            </ul>
-            
-            <p style="font-size: 12px; color: #64ffda;">* Disclaimer: This is a demonstration application and should not replace professional medical advice.</p>
-        </div>
-    """, unsafe_allow_html=True)
 
+    st.subheader("About the AI Model")
+    st.write(
+        "This machine learning model analyzes medical parameters "
+        "to estimate stroke risk. It is for educational purposes only."
+    )
+
+    st.subheader("Technologies Used")
+    st.write("Python • Streamlit • Scikit-learn • Machine Learning")
+
+    st.caption("⚠️ Disclaimer: This is not a medical diagnosis tool.")
+
+# ---------------- RUN ----------------
 if __name__ == "__main__":
     main()
