@@ -1,3 +1,4 @@
+/* ---------------- GLOBAL THEME ---------------- */
 body {
     background-color: #0f172a;
     color: white;
@@ -8,6 +9,25 @@ body {
     color: white;
 }
 
+/* ---------------- TEXT VISIBILITY FIX ---------------- */
+label {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+.stSelectbox label,
+.stNumberInput label,
+.stSlider label {
+    color: #ffffff !important;
+    font-weight: 600 !important;
+}
+
+/* Input text visibility */
+input, textarea {
+    color: black !important;
+}
+
+/* ---------------- HERO SECTION ---------------- */
 .hero-container {
     text-align: center;
     padding: 30px;
@@ -27,6 +47,7 @@ body {
     color: #94a3b8;
 }
 
+/* ---------------- CARDS ---------------- */
 .glass-card {
     background: rgba(255,255,255,0.05);
     padding: 25px;
@@ -35,11 +56,13 @@ body {
     margin-bottom: 20px;
 }
 
+/* ---------------- SECTION HEADER ---------------- */
 .section-header {
     color: #64ffda;
     margin-bottom: 20px;
 }
 
+/* ---------------- RESULT CARDS ---------------- */
 .result-card {
     padding: 20px;
     border-radius: 15px;
@@ -65,8 +88,14 @@ body {
     font-weight: bold;
 }
 
+/* ---------------- FOOTER ---------------- */
 .footer-container {
     text-align: center;
     padding: 30px;
     color: #94a3b8;
+}
+
+.footer-container p,
+.footer-container li {
+    color: #cbd5e1;
 }
