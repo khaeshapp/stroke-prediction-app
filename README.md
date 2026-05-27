@@ -1,239 +1,183 @@
-# AI Stroke Risk Prediction System
+# Stroke Risk Prediction - Deployment Guide
 
-A full-stack healthcare application for predicting stroke risk using machine learning.
+## Files You Need to Upload to GitHub
 
-## Architecture
+Upload these **5 files** to your GitHub repository:
 
-- **Frontend**: React + TypeScript + Tailwind CSS (Vite)
-- **Backend Options**:
-  - Flask (Python) - Local development
-  - Supabase Edge Functions (Deno/TypeScript) - Cloud deployment
+### 1. Application Files
+| File | Description |
+|------|-------------|
+| `streamlit_app.py` | Main Streamlit application (the UI) |
+| `requirements.txt` | List of Python packages needed |
+
+### 2. Model Files (from your Colab notebook)
+| File | Description |
+|------|-------------|
+| `stroke_model.pkl` | Trained Logistic Regression model |
+| `std_scaler.pkl` | StandardScaler for age normalization |
+| `minmax_scaler.pkl` | MinMaxScaler for glucose/BMI |
+| `features.pkl` | Feature column names in correct order |
 
 ---
 
-## Quick Start
+## Step-by-Step Deployment Guide
 
-### Frontend Setup
+### Step 1: Get Your Model Files from Colab
+
+1. Open your `STROKE_PROJECT_(2).ipynb` notebook in Google Colab
+2. Run all cells until the end (where model files are saved)
+3. Download these files from Colab:
+   - `stroke_model.pkl`
+   - `std_scaler.pkl`
+   - `minmax_scaler.pkl`
+   - `features.pkl`
+
+**How to download from Colab:**
+- Click the folder icon on the left sidebar
+- Right-click on each `.pkl` file
+- Select "Download"
+
+---
+
+### Step 2: Create a GitHub Repository
+
+1. Go to https://github.com and sign in
+2. Click the **+** icon → **New repository**
+3. Name it: `stroke-prediction-app`
+4. Make it **Public** (required for free Streamlit Cloud)
+5. Click **Create repository**
+
+---
+
+### Step 3: Upload Files to GitHub
+
+**Option A: Using GitHub Website (Easiest)**
+
+1. Go to your repository page
+2. Click **" Add file" → "Upload files"**
+3. Drag and drop all 6 files:
+   ```
+   streamlit_app.py
+   requirements.txt
+   stroke_model.pkl
+   std_scaler.pkl
+   minmax_scaler.pkl
+   features.pkl
+   ```
+4. Add commit message: "Initial commit"
+5. Click **"Commit changes"**
+
+**Option B: Using Git Command Line**
 
 ```bash
-# Install dependencies
-npm install
+# Clone your repository
+git clone https://github.com/YOUR_USERNAME/stroke-prediction-app.git
+cd stroke-prediction-app
 
-# Start development server
-npm run dev
-```
+# Copy your files to this folder
+cp /path/to/streamlit_app.py .
+cp /path/to/requirements.txt .
+cp /path/to/stroke_model.pkl .
+cp /path/to/std_scaler.pkl .
+cp /path/to/minmax_scaler.pkl .
+cp /path/to/features.pkl .
 
-The frontend will run on `http://localhost:5173`
-
-### Backend Setup - Flask (Recommended for Local Development)
-
-1. **Install Python dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-2. **Start Flask server**:
-   ```bash
-   python app.py
-   ```
-
-   The API will run on `http://localhost:5000`
-
-3. **Verify API is running**:
-   ```bash
-   curl http://localhost:5000/health
-   ```
-
-### Backend Setup - Supabase (Cloud Deployment)
-
-The Supabase Edge Function is already deployed. To switch between backends:
-
-1. Update `.env` file:
-   ```env
-   VITE_API_MODE=supabase
-   ```
-
-2. Restart the frontend development server
-
----
-
-## API Endpoints
-
-### Flask Backend
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/` | GET | API information |
-| `/health` | GET | Health check |
-| `/predict` | POST | Predict stroke risk |
-| `/history` | GET | Get prediction history |
-| `/model-info` | GET | Get ML model information |
-
-### Example API Request
-
-```bash
-curl -X POST http://localhost:5000/predict \
-  -H "Content-Type: application/json" \
-  -d '{
-    "patientData": {
-      "age": 65,
-      "gender": "Male",
-      "hypertension": "Yes",
-      "heartDisease": "No",
-      "everMarried": "Yes",
-      "residenceType": "Urban",
-      "avgGlucoseLevel": 180,
-      "bmi": 28.5,
-      "workType": "Private",
-      "smokingStatus": "NeverSmoked"
-    }
-  }'
-```
-
-### Example Response
-
-```json
-{
-  "success": true,
-  "prediction": {
-    "risk_level": "medium",
-    "risk_percentage": 48,
-    "confidence": 85,
-    "risk_factors": [
-      "Age increases stroke risk after 55",
-      "Hypertension is a major stroke risk factor",
-      "Elevated glucose affects vascular health",
-      "Consider lifestyle modifications"
-    ]
-  },
-  "timestamp": "2026-05-26T10:30:00"
-}
+# Upload to GitHub
+git add .
+git commit -m "Add stroke prediction app"
+git push origin main
 ```
 
 ---
 
-## Configuration
+### Step 4: Deploy on Streamlit Cloud
 
-### Environment Variables
+1. Go to https://share.streamlit.io
+2. Click **"Sign in with GitHub"**
+3. Click **"New app"**
+4. Fill in the details:
+   - **Repository**: Select `stroke-prediction-app`
+   - **Branch**: `main`
+   - **Main file path**: `streamlit_app.py`
+   - **Python version**: 3.11
+5. Click **"Deploy!"**
 
-Create a `.env` file in the project root:
+---
 
-```env
-# Supabase (for cloud deployment)
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+### Step 5: Your App is Live!
 
-# Backend Mode: 'flask' or 'supabase'
-VITE_API_MODE=flask
-VITE_FLASK_API_URL=http://localhost:5000
+After a few minutes, you'll get a public URL like:
+```
+https://stroke-prediction-app-username.streamlit.app
 ```
 
-### Switching Backends
+Share this URL with anyone - they can use your app!
 
-**Use Flask (Local)**:
-```env
-VITE_API_MODE=flask
-VITE_FLASK_API_URL=http://localhost:5000
-```
+---
 
-**Use Supabase (Cloud)**:
-```env
-VITE_API_MODE=supabase
-```
+## Troubleshooting
+
+### Issue: "ModuleNotFoundError"
+**Solution**: Make sure `requirements.txt` includes all needed packages
+
+### Issue: "FileNotFoundError: stroke_model.pkl"
+**Solution**: Upload all `.pkl` files to your GitHub repository
+
+### Issue: App won't start
+**Solution**:
+1. Check the logs in Streamlit Cloud
+2. Ensure file names match exactly (case-sensitive)
+3. Verify `streamlit_app.py` is in the root directory
+
+### Issue: Model gives wrong predictions
+**Solution**:
+1. Re-download model files from Colab
+2. Make sure you ran the full training notebook
+3. Re-upload `.pkl` files to GitHub
 
 ---
 
 ## Project Structure
 
+Your GitHub repository should look like this:
 ```
-project/
-├── app.py                      # Flask backend
-├── requirements.txt            # Python dependencies
-├── src/
-│   ├── App.tsx                # Main React component
-│   ├── lib/
-│   │   └── supabase.ts        # Supabase client
-│   └── services/
-│       └── predictionService.ts  # API integration
-├── supabase/
-│   └── functions/
-│       └── stroke-prediction/
-│           └── index.ts       # Supabase Edge Function
-└── .env                       # Environment configuration
+stroke-prediction-app/
+├── streamlit_app.py          # Main app (provided)
+├── requirements.txt          # Dependencies (provided)
+├── stroke_model.pkl          # Model (from Colab)
+├── std_scaler.pkl            # Scaler (from Colab)
+├── minmax_scaler.pkl         # Scaler (from Colab)
+└── features.pkl              # Features (from Colab)
 ```
 
 ---
 
-## ML Prediction Algorithm
+## Quick Reference
 
-The prediction model uses a weighted scoring system:
+### Model Performance
+- Algorithm: Logistic Regression
+- Accuracy: 79.2%
+- Recall: 48.5%
+- F1-Score: 14.9%
 
-| Factor | Weight |
-|--------|--------|
-| Age 65+ | 20 points |
-| Hypertension | 25 points |
-| Heart Disease | 25 points |
-| Current Smoker | 15 points |
-| High Glucose (>200) | 20 points |
-| Obesity (BMI >30) | 10-15 points |
-
-**Risk Levels**:
-- **Low**: 0-29%
-- **Medium**: 30-59%
-- **High**: 60%+
-
----
-
-## Development
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-### Run Type Checks
-
-```bash
-npm run typecheck
-```
-
-### Run Linter
-
-```bash
-npm run lint
-```
+### Input Features Required
+1. Age (years)
+2. Gender (Male/Female/Other)
+3. Hypertension (Yes/No)
+4. Heart Disease (Yes/No)
+5. Ever Married (Yes/No)
+6. Work Type
+7. Residence Type (Urban/Rural)
+8. Average Glucose Level (mg/dL)
+9. BMI
+10. Smoking Status
 
 ---
 
-## Deployment
+## Need Help?
 
-### Frontend (Vercel, Netlify, etc.)
+- Streamlit docs: https://docs.streamlit.io
+- GitHub docs: https://docs.github.com
+- Model training: Check your Colab notebook
 
-1. Build the project:
-   ```bash
-   npm run build
-   ```
-
-2. Deploy the `dist/` folder
-
-### Backend
-
-- **Flask**: Deploy to Heroku, Render, Railway, or any Python hosting
-- **Supabase**: Already deployed! Just use `VITE_API_MODE=supabase`
-
----
-
-## Technology Stack
-
-- **Frontend**: React 18, TypeScript, Tailwind CSS, Vite
-- **Backend**: Flask (Python), Supabase Edge Functions
-- **Database**: Supabase PostgreSQL
-- **Icons**: Lucide React
-- **ML**: Weighted scoring algorithm
-
----
-
-## License
-
-MIT License - For educational and demonstration purposes.
+Good luck with your deployment! 🚀
