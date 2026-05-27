@@ -1,21 +1,3 @@
-"""
-Stroke Risk Prediction System - Streamlit Application
-Easy to deploy on Streamlit Cloud!
-
-Instructions for deployment:
-1. Create a GitHub repository
-2. Upload these files:
-   - streamlit_app.py (this file)
-   - stroke_model.pkl
-   - std_scaler.pkl
-   - minmax_scaler.pkl
-   - features.pkl
-   - requirements.txt
-3. Go to share.streamlit.io
-4. Connect your GitHub and select this repository
-5. Your app will be live on a public URL!
-"""
-
 import streamlit as st
 import numpy as np
 import pandas as pd
